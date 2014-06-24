@@ -2,10 +2,10 @@ package ru.dopler.cellField;
 
 import java.awt.*;
 
-public class Wall extends Cell {
+public class EndCell extends Cell {
 
-    public Wall () {
-        fillColor = Color.darkGray;
+    public EndCell () {
+        fillColor = Color.blue;
         borderColor = Color.gray;
     }
 
