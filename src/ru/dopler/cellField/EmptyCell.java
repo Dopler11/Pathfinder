@@ -4,20 +4,20 @@ import java.awt.*;
 
 public class EmptyCell extends Cell {
 
-    private int f = 0;
+    private double f = 0;
     private int g = 0;
-    private int h = 0;
+    private double h = 0;
 
     public EmptyCell () {
         fillColor = Color.white;
         borderColor = Color.gray;
     }
 
-    public int getF () {
+    public double getF () {
         return f;
     }
 
-    public void setF (int f) {
+    public void setF (double f) {
         this.f = f;
     }
 
@@ -29,13 +29,12 @@ public class EmptyCell extends Cell {
         this.g = g;
     }
 
-    public int getH () {
+    public double getH () {
         return h;
     }
 
-    public void setH (int h) {
+    public void setH (double h) {
         this.h = h;
     }
-
 
 }
