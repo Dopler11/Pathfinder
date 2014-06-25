@@ -11,25 +11,27 @@ import java.util.concurrent.TimeUnit;
 
 public class CellField extends JPanel implements MouseListener, MouseMotionListener {
 
-    private static final boolean DELAY_FLAG = true;
+    private static final boolean DELAY_FLAG = false;
     private static final int REFRESH_TIME_MS = 20;
 
     private static final int SIMPLE_TRANSFER = 10;
     private static final int DIAGONAL_TRANSFER = 14;
 
-    private static final Color OPENED_CELLS_COLOR = Color.blue;
-    private static final Color CLOSED_CELLS_COLOR = Color.red;
+    private static final Color OPENED_CELLS_COLOR = new Color(170, 245, 245);
+    private static final Color CLOSED_CELLS_COLOR = new Color(170, 245, 175);
+
+    private static final boolean DRAW_CELL_INFO_FLAG = false;
 
     private List<Point> openedCells;
     private List<Point> closedCells;
 
-    private int width = 16;
-    private int height = 13;
+    private int width = 100;
+    private int height = 60;
 
     private final Point defaultStartPoint = new Point(1, height / 2);
     private final Point defaultEndPoint = new Point(width - 2, height / 2);
 
-    private int cellSize = 50;
+    private int cellSize = 10;
 
     private int mouseX;
     private int mouseY;
@@ -41,9 +43,13 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     private Cell[][] grid = new Cell[width][height];
 
+    private boolean isPathFind = false;
+
     public CellField () {
         super();
         setLayout(null);
+        setFocusable(true);
+        requestFocus();
 
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -54,17 +60,16 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
                     new Thread(new Runnable() {
                         @Override
                         public void run () {
-                            startPathfinder();
+                            isPathFind = startPathfinder();
                         }
                     }).start();
+
                 } else if (e.getKeyChar() == KeyEvent.VK_SPACE) {
-                    initGrid();
+                    isPathFind = false;
+                    resetGrid();
                 }
             }
         });
-
-        setFocusable(true);
-        requestFocus();
 
         initGrid();
         initPainter();
@@ -79,6 +84,18 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         grid[defaultStartPoint.x][defaultStartPoint.y] = new StartCell();
         grid[defaultEndPoint.x][defaultEndPoint.y] = new EndCell();
 
+        openedCells = new ArrayList<Point>();
+        closedCells = new ArrayList<Point>();
+    }
+
+    private void resetGrid () {
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (grid[i][j] instanceof EmptyCell) {
+                    grid[i][j] = new EmptyCell();
+                }
+            }
+        }
         openedCells = new ArrayList<Point>();
         closedCells = new ArrayList<Point>();
     }
@@ -100,17 +117,22 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
         drawGridInfo(g2d);
         drawCells(g2d);
-        drawCellsInfo(g2d);
+        if (DRAW_CELL_INFO_FLAG) {
+            drawCellsInfo(g2d);
+        }
+        if (isPathFind) {
+            drawPath(g2d);
+        }
     }
 
     private void drawGridInfo (Graphics2D g2d) {
-        g2d.drawString(String.format("Mouse: x = %s y = %s", mouseX, mouseY), 840, 50);
+        g2d.drawString(String.format("Mouse: x = %s y = %s", mouseX, mouseY), width * cellSize + 20, 50);
 
         Point point = getStartCell();
-        g2d.drawString(String.format("Start point: i = %s j = %s", point.x, point.y), 840, 70);
+        g2d.drawString(String.format("Start point: i = %s j = %s", point.x, point.y), width * cellSize + 20, 70);
 
         point = getEndCell();
-        g2d.drawString(String.format("End point: i = %s j = %s", point.x, point.y), 840, 90);
+        g2d.drawString(String.format("End point: i = %s j = %s", point.x, point.y), width * cellSize + 20, 90);
     }
 
     private void drawCells (Graphics2D g2d) {
@@ -162,22 +184,40 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     }
 
     private void drawParentPointer (Point paintCurrentCell, Point paintParentCell, Graphics2D g2d) {
-        if (paintParentCell != null) {
-            g2d.setColor(Color.black);
+        if (paintParentCell == null) {
+            return;
+        }
+        g2d.setColor(Color.black);
 
-            Point currentCellCenter = getCellCenter(paintCurrentCell);
-            Point parentCellCenter = getCellCenter(paintParentCell);
+        Point currentCellCenter = getCellCenter(paintCurrentCell);
+        Point parentCellCenter = getCellCenter(paintParentCell);
 
-            final int length = 7;
+        final int length = 7;
 
-            Point p1 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, length);
-            Point p2 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, -length);
+        Point p1 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, length);
+        Point p2 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, -length);
 
-            g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
+        g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
 
-            p1 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, -length - 3);
+        p1 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, -length - 3);
 
-            g2d.drawOval(p1.x - 3, p1.y - 3, 6, 6);
+        g2d.drawOval(p1.x - 3, p1.y - 3, 6, 6);
+    }
+
+    private void drawPath (Graphics2D g2d) {
+        g2d.setColor(Color.yellow);
+        Point currentCell = getEndCell();
+        while (!(grid[currentCell.x][currentCell.y] instanceof StartCell)) {
+            Point parentCell = grid[currentCell.x][currentCell.y].getParent();
+            Point paintCurrentCell = new Point(currentCell.x * cellSize, currentCell.y * cellSize);
+            Point paintParentCell = getPaintParentCell(currentCell.x, currentCell.y);
+
+            Point currentCenter = getCellCenter(paintCurrentCell);
+            Point parentCenter = getCellCenter(paintParentCell);
+
+            g2d.drawLine(currentCenter.x, currentCenter.y, parentCenter.x, parentCenter.y);
+
+            currentCell = parentCell;
         }
     }
 
@@ -316,68 +356,91 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         return j;
     }
 
-    private void startPathfinder () {
-        try {
-            Point startCell = getStartCell();
-            Point endCell = getEndCell();
+    private boolean startPathfinder () {
+        addToOpenedCells(getStartCell());
+        while (true) {
+            int selectedCellIndex = getNextCellIndex();
+            Point selectedCell = openedCells.get(selectedCellIndex);
 
-            Point selectedCell = startCell;
-            int selectedCellIndex;
+            openedCells.remove(selectedCellIndex);
+            addToClosedCells(selectedCell);
 
-            Point lastOpenedCell;
-            do {
-                addToOpened(selectedCell);
-                delay();
+            if (processAdjoiningCells(selectedCell)) {
+                return true;
+            }
 
-                selectedCellIndex = openedCells.size() - 1;
+            if (openedCells.isEmpty()) {
+                return false;
+            }
+        }
+    }
 
-                addAllToOpened(getAdjoiningCells(selectedCell));
-                openedCells.remove(selectedCellIndex);
-                addToClosed(selectedCell);
+    private boolean processAdjoiningCells (Point selectedCell) {
+        List<Point> adjoiningCells = getAdjoiningCells(selectedCell);
+        for (Point adjoiningCell : adjoiningCells) {
+            if (grid[adjoiningCell.x][adjoiningCell.y] instanceof EndCell) {
+                grid[adjoiningCell.x][adjoiningCell.y].setParent(selectedCell);
+                return true;
+            }
+            countF(adjoiningCell);
+            if (isCellOpened(adjoiningCell)) {
+                int adjoiningCellG = ((EmptyCell) grid[adjoiningCell.x][adjoiningCell.y]).getG();
+                int selectedCellG = ((EmptyCell) grid[selectedCell.x][selectedCell.y]).getG();
 
-                int minF = Integer.MAX_VALUE;
-                for (int i = 0; i < openedCells.size(); i++) {
-                    Point currentCell = openedCells.get(i);
-
-                    int localF = countG(currentCell) + countH(currentCell);
-                    ((EmptyCell) grid[currentCell.x][currentCell.y]).setF(localF);
-
-                    if (localF < minF) {
-                        minF = localF;
-                        selectedCellIndex = i;
-                        selectedCell = openedCells.get(selectedCellIndex);
-                    }
-                    delay();
+                int transferG;
+                if (adjoiningCell.x == selectedCell.x || adjoiningCell.y == selectedCell.y) {
+                    transferG = SIMPLE_TRANSFER;
+                } else {
+                    transferG = DIAGONAL_TRANSFER;
                 }
 
-                openedCells.remove(selectedCellIndex);
-                addToClosed(selectedCell);
+                int summaryG = selectedCellG + transferG;
 
-                lastOpenedCell = openedCells.get(openedCells.size() - 1);
-
-                delay();
-            } while (lastOpenedCell.equals(endCell) || openedCells.isEmpty());
-
-        } catch (Exception e) {
-            e.printStackTrace();
+                if (summaryG < adjoiningCellG) {
+                    grid[adjoiningCell.x][adjoiningCell.y].setParent(selectedCell);
+                    countF(adjoiningCell);
+                }
+            } else {
+                addToOpenedCells(adjoiningCell);
+                countF(adjoiningCell);
+            }
         }
+        return false;
     }
 
-    private void addAllToOpened (List<Point> cells) {
-        for (Point cell : cells) {
-            addToOpened(cell);
+    private int getNextCellIndex () {
+        int selectedCellIndex = -1;
+        int minF = Integer.MAX_VALUE;
+
+        for (int i = 0; i < openedCells.size(); i++) {
+            Point currentOpenCell = openedCells.get(i);
+
+            int localF = 0;
+            if (grid[currentOpenCell.x][currentOpenCell.y] instanceof EmptyCell) {
+                localF = ((EmptyCell) grid[currentOpenCell.x][currentOpenCell.y]).getF();
+            }
+
+            if (localF < minF) {
+                minF = localF;
+                selectedCellIndex = i;
+            }
             delay();
         }
+        return selectedCellIndex;
     }
 
-    private void addToOpened (Point cell) {
+    private void addToOpenedCells (Point cell) {
         openedCells.add(cell);
-        grid[cell.x][cell.y].setBorderColor(OPENED_CELLS_COLOR);
+        if (grid[cell.x][cell.y] instanceof EmptyCell) {
+            grid[cell.x][cell.y].setFillColor(OPENED_CELLS_COLOR);
+        }
     }
 
-    private void addToClosed (Point cell) {
+    private void addToClosedCells (Point cell) {
         closedCells.add(cell);
-        grid[cell.x][cell.y].setBorderColor(CLOSED_CELLS_COLOR);
+        if (grid[cell.x][cell.y] instanceof EmptyCell) {
+            grid[cell.x][cell.y].setFillColor(CLOSED_CELLS_COLOR);
+        }
     }
 
     private List<Point> getAdjoiningCells (Point parentCell) {
@@ -398,7 +461,11 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     }
 
     private void addAdjoiningCell (List<Point> adjoiningCells, Point adjoiningCell, Point parentCell) {
-        if (!(grid[adjoiningCell.x][adjoiningCell.y] instanceof Wall) && !isCellClosed(adjoiningCell)) {
+        if (adjoiningCell.x < 0 || adjoiningCell.y < 0 || adjoiningCell.x >= width || adjoiningCell.y >= height) {
+            return;
+        }
+
+        if (!(grid[adjoiningCell.x][adjoiningCell.y] instanceof Wall) && !isCellClosed(adjoiningCell) && !isCellOpened(adjoiningCell)) {
             adjoiningCells.add(new Point(adjoiningCell.x, adjoiningCell.y));
             grid[adjoiningCell.x][adjoiningCell.y].setParent(parentCell);
         }
@@ -414,9 +481,29 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         return false;
     }
 
+    private boolean isCellOpened (Point adjoiningCell) {
+        for (Point openedCell : openedCells) {
+            if (adjoiningCell.equals(openedCell)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int countF (Point currentOpenCell) {
+        if (grid[currentOpenCell.x][currentOpenCell.y] instanceof EmptyCell) {
+            int localF = countG(currentOpenCell) + countH(currentOpenCell);
+            ((EmptyCell) grid[currentOpenCell.x][currentOpenCell.y]).setF(localF);
+            return localF;
+        } else {
+            return 0;
+        }
+    }
+
     private int countG (Point currentCell) {
         Point startCell = getStartCell();
         Point localCell = currentCell;
+
         int G = 0;
         while (!localCell.equals(startCell)) {
             Point parentCell = grid[localCell.x][localCell.y].getParent();
@@ -437,7 +524,9 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     private int countH (Point currentCell) {
         Point endCell = getEndCell();
 
-        int H = Math.abs(endCell.x - currentCell.x) + Math.abs(endCell.y - currentCell.y);
+        //int H = Math.abs(endCell.x - currentCell.x) + Math.abs(endCell.y - currentCell.y);
+        int H = (int) Math.sqrt((endCell.x - currentCell.x) * (endCell.x - currentCell.x) +
+                (endCell.y - currentCell.y) * (endCell.y - currentCell.y));
 
         ((EmptyCell) grid[currentCell.x][currentCell.y]).setH(H);
         return H;
@@ -446,7 +535,7 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     private void delay () {
         try {
             if (DELAY_FLAG) {
-                Thread.sleep(30);
+                Thread.sleep(20);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
