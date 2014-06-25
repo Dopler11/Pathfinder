@@ -11,8 +11,14 @@ import java.util.concurrent.TimeUnit;
 
 public class CellField extends JPanel implements MouseListener, MouseMotionListener {
 
-    private final static int SIMPLE_TRANSFER = 10;
-    private final static int DIAGONAL_TRANSFER = 14;
+    private static final boolean DELAY_FLAG = true;
+    private static final int REFRESH_TIME_MS = 20;
+
+    private static final int SIMPLE_TRANSFER = 10;
+    private static final int DIAGONAL_TRANSFER = 14;
+
+    private static final Color OPENED_CELLS_COLOR = Color.blue;
+    private static final Color CLOSED_CELLS_COLOR = Color.red;
 
     private List<Point> openedCells;
     private List<Point> closedCells;
@@ -84,7 +90,7 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
             public void run () {
                 repaint();
             }
-        }, 0, 20, TimeUnit.MILLISECONDS);
+        }, 0, REFRESH_TIME_MS, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -118,48 +124,65 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
                 g2d.setColor(grid[i][j].getBorderColor());
                 g2d.drawRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
-
-                if (grid[i][j] instanceof EmptyCell) {
-                    g2d.setColor(Color.black);
-                    g2d.drawString(String.valueOf(((EmptyCell) grid[i][j]).getF()), x + 3, y + 14);
-                    g2d.drawString(String.valueOf(((EmptyCell) grid[i][j]).getG()), x + 3, y + cellSize - 3);
-                    g2d.drawString(String.valueOf(((EmptyCell) grid[i][j]).getH()), x + cellSize - 14, y + cellSize - 3);
-                }
             }
         }
     }
 
     private void drawCellsInfo (Graphics2D g2d) {
+        Point paintCurrentCell = new Point();
+        Point paintParentCell;
         for (int i = 0; i < width; i++) {
-            int x = i * cellSize;
+            paintCurrentCell.x = i * cellSize;
             for (int j = 0; j < height; j++) {
-                int y = j * cellSize;
+                paintCurrentCell.y = j * cellSize;
+                paintParentCell = getPaintParentCell(i, j);
 
-                Point parentCell = grid[i][j].getParent();
-                if (parentCell != null) {
-                    g2d.setColor(Color.black);
-
-                    int centerX = x + cellSize / 2;
-                    int centerY = y + cellSize / 2;
-                    Point centerP = new Point(centerX, centerY);
-
-                    int parentCenterX = parentCell.x * cellSize + cellSize / 2;
-                    int parentCenterY = parentCell.y * cellSize + cellSize / 2;
-                    Point parentCenterP = new Point(parentCenterX, parentCenterY);
-
-                    int length = 7;
-
-                    Point p1 = getPointByLengthOnLine(centerP, parentCenterP, length);
-                    Point p2 = getPointByLengthOnLine(centerP, parentCenterP, -length);
-
-                    g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
-
-                    p1 = getPointByLengthOnLine(centerP, parentCenterP, -length - 3);
-
-                    g2d.drawOval(p1.x - 3, p1.y - 3, 6, 6);
-                }
+                drawCellText(i, j, paintCurrentCell, g2d);
+                drawParentPointer(paintCurrentCell, paintParentCell, g2d);
             }
         }
+    }
+
+    private Point getPaintParentCell (int i, int j) {
+        Point parent = grid[i][j].getParent();
+        if (parent != null) {
+            return new Point(parent.x * cellSize, parent.y * cellSize);
+        } else {
+            return null;
+        }
+    }
+
+    private void drawCellText (int i, int j, Point paintCurrentCell, Graphics2D g2d) {
+        if (grid[i][j] instanceof EmptyCell) {
+            g2d.setColor(Color.black);
+            g2d.drawString(String.valueOf(((EmptyCell) grid[i][j]).getF()), paintCurrentCell.x + 3, paintCurrentCell.y + 16);
+            g2d.drawString(String.valueOf(((EmptyCell) grid[i][j]).getG()), paintCurrentCell.x + 3, paintCurrentCell.y + cellSize - 3);
+            g2d.drawString(String.valueOf(((EmptyCell) grid[i][j]).getH()), paintCurrentCell.x + cellSize - 16, paintCurrentCell.y + cellSize - 3);
+        }
+    }
+
+    private void drawParentPointer (Point paintCurrentCell, Point paintParentCell, Graphics2D g2d) {
+        if (paintParentCell != null) {
+            g2d.setColor(Color.black);
+
+            Point currentCellCenter = getCellCenter(paintCurrentCell);
+            Point parentCellCenter = getCellCenter(paintParentCell);
+
+            final int length = 7;
+
+            Point p1 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, length);
+            Point p2 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, -length);
+
+            g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
+
+            p1 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, -length - 3);
+
+            g2d.drawOval(p1.x - 3, p1.y - 3, 6, 6);
+        }
+    }
+
+    private Point getCellCenter (Point cell) {
+        return new Point(cell.x + cellSize / 2, cell.y + cellSize / 2);
     }
 
     public Point getStartCell () {
@@ -293,7 +316,7 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         return j;
     }
 
-    public void startPathfinder () {
+    private void startPathfinder () {
         try {
             Point startCell = getStartCell();
             Point endCell = getEndCell();
@@ -304,7 +327,7 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
             Point lastOpenedCell;
             do {
                 addToOpened(selectedCell);
-                //Thread.sleep(1000);
+                delay();
 
                 selectedCellIndex = openedCells.size() - 1;
 
@@ -324,19 +347,16 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
                         selectedCellIndex = i;
                         selectedCell = openedCells.get(selectedCellIndex);
                     }
+                    delay();
                 }
-                System.out.println();
-                System.out.println(String.format("selected cell: %s, F = %s", selectedCell, minF));
 
                 openedCells.remove(selectedCellIndex);
                 addToClosed(selectedCell);
 
                 lastOpenedCell = openedCells.get(openedCells.size() - 1);
 
-                //Thread.sleep(1000);
+                delay();
             } while (lastOpenedCell.equals(endCell) || openedCells.isEmpty());
-
-            System.out.println(openedCells);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -346,17 +366,18 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     private void addAllToOpened (List<Point> cells) {
         for (Point cell : cells) {
             addToOpened(cell);
+            delay();
         }
     }
 
     private void addToOpened (Point cell) {
         openedCells.add(cell);
-        grid[cell.x][cell.y].setBorderColor(Color.blue);
+        grid[cell.x][cell.y].setBorderColor(OPENED_CELLS_COLOR);
     }
 
     private void addToClosed (Point cell) {
         closedCells.add(cell);
-        grid[cell.x][cell.y].setBorderColor(Color.green);
+        grid[cell.x][cell.y].setBorderColor(CLOSED_CELLS_COLOR);
     }
 
     private List<Point> getAdjoiningCells (Point parentCell) {
@@ -381,6 +402,7 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
             adjoiningCells.add(new Point(adjoiningCell.x, adjoiningCell.y));
             grid[adjoiningCell.x][adjoiningCell.y].setParent(parentCell);
         }
+        delay();
     }
 
     private boolean isCellClosed (Point adjoiningCell) {
@@ -419,5 +441,15 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
         ((EmptyCell) grid[currentCell.x][currentCell.y]).setH(H);
         return H;
+    }
+
+    private void delay () {
+        try {
+            if (DELAY_FLAG) {
+                Thread.sleep(30);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
