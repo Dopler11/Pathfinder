@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,13 +28,13 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     private List<Point> openedCells;
     private List<Point> closedCells;
 
-    private int width = 40;
-    private int height = 31;
+    private int width = 350;
+    private int height = 200;
 
     private final Point defaultStartPoint = new Point(1, height / 2);
     private final Point defaultEndPoint = new Point(width - 2, height / 2);
 
-    private int cellSize = 20;
+    private int cellSize = 5;
 
     private int mouseX;
     private int mouseY;
@@ -50,6 +51,8 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     private JTextField dTextField = new JTextField("5");
 
+    private Thread solutionThread;
+
     public CellField () {
         super();
         setLayout(null);
@@ -62,6 +65,8 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
             @Override
             public void keyReleased (KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+                    resetSolution();
+                    initGrid();
                     startSolution();
 
                 } else if (e.getKeyChar() == KeyEvent.VK_SPACE) {
@@ -93,7 +98,6 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
                     //@fmt:off
                 } else if (e.getKeyCode() >= KeyEvent.VK_0 && e.getKeyCode() <= KeyEvent.VK_9
                         || e.getKeyCode() >= KeyEvent.VK_NUMPAD0 && e.getKeyCode() <= KeyEvent.VK_NUMPAD9) {
-                    resetSolution();
                     startSolution();
                 }
                 //@fmt:on
@@ -103,23 +107,30 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
         initGrid();
         initPainter();
+
+        startSolution();
     }
 
     private void initGrid () {
+        Random rnd = new Random();
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                field[i][j] = new EmptyCell();
+                if (rnd.nextInt(100) >= 30) {
+                    field[i][j] = new EmptyCell();
+                } else {
+                    field[i][j] = new Wall();
+                }
             }
         }
-        field[defaultStartPoint.x][defaultStartPoint.y] = new StartCell();
-        field[defaultEndPoint.x][defaultEndPoint.y] = new EndCell();
+        field[rnd.nextInt(width)][rnd.nextInt(height)] = new StartCell();
+        field[rnd.nextInt(width)][rnd.nextInt(height)] = new EndCell();
 
         openedCells = new ArrayList<Point>();
         closedCells = new ArrayList<Point>();
     }
 
     private void startSolution () {
-        new Thread(new Runnable() {
+        solutionThread = new Thread(new Runnable() {
             @Override
             public void run () {
                 resetSolution();
@@ -136,7 +147,9 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
                     countPathLength();
                 }
             }
-        }).run();
+        });
+
+        solutionThread.start();
     }
 
     private void countPathLength () {
@@ -396,6 +409,10 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
         if (e.getModifiersEx() == MouseEvent.BUTTON1_DOWN_MASK) {
             if (draggedCell != null) {
+                if (field[i][j] instanceof Wall) {
+                    return;
+                }
+
                 field[i][j] = draggedCell;
                 if (i != lastI || j != lastJ) {
                     field[lastI][lastJ] = new EmptyCell();
@@ -409,6 +426,10 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
         } else if (e.getModifiersEx() == MouseEvent.BUTTON3_DOWN_MASK) {
             if (draggedCell != null) {
+                if (field[i][j] instanceof Wall) {
+                    return;
+                }
+
                 field[i][j] = draggedCell;
                 if (i != lastI || j != lastJ) {
                     field[lastI][lastJ] = new EmptyCell();
@@ -419,7 +440,6 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         }
 
         mouseMoved(e);
-        resetSolution();
         startSolution();
     }
 
