@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class CellField extends JPanel implements MouseListener, MouseMotionListener {
 
     private static final boolean DELAY_FLAG = false;
-    private static final int REFRESH_TIME_MS = 20;
+    private static final int REFRESH_TIME_MS = 1;
 
     private static final int DIRECT_TRANSFER = 10;
     private static final int DIAGONAL_TRANSFER = 14;
@@ -28,13 +28,13 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     private List<Point> openedCells;
     private List<Point> closedCells;
 
-    private int width = 350;
-    private int height = 200;
+    private int width = 70;
+    private int height = 50;
 
     private final Point defaultStartPoint = new Point(1, height / 2);
     private final Point defaultEndPoint = new Point(width - 2, height / 2);
 
-    private int cellSize = 5;
+    private int cellSize = 20;
 
     private int mouseX;
     private int mouseY;
@@ -48,6 +48,8 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     private boolean isPathFind = false;
     private float pathLength;
+
+    float lenFromStartToEnd;
 
     private JTextField dTextField = new JTextField("5");
 
@@ -460,6 +462,12 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     }
 
     private boolean startAStar () {
+        Point endCell = getEndCell();
+        Point startCell = getStartCell();
+        int dx = Math.abs(endCell.x - startCell.x);
+        int dy = Math.abs(endCell.y - startCell.y);
+        lenFromStartToEnd = (float) Math.sqrt(dx * dx + dy * dy);
+
         addToOpenedCells(getStartCell());
         while (true) {
             int selectedCellIndex = getNextCellIndex();
@@ -543,7 +551,17 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     private void addToClosedCells (Point cell) {
         closedCells.add(cell);
         if (field[cell.x][cell.y] instanceof EmptyCell) {
-            field[cell.x][cell.y].setFillColor(CLOSED_CELLS_COLOR);
+            Point endCell = getEndCell();
+            int dx = endCell.x - cell.x;
+            int dy = endCell.y - cell.y;
+            float lenColor = (float) Math.sqrt(dx * dx + dy * dy);
+
+            float alpha = 255 - (lenColor / (lenFromStartToEnd / 100)) * (255 / 100);
+            alpha = alpha < 0 ? 0 : alpha;
+
+            Color color = new Color(10, 150, 40, (int) alpha);
+
+            field[cell.x][cell.y].setFillColor(color);
         }
     }
 
@@ -669,7 +687,10 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     private double countH (Point currentCell) {
         Point endCell = getEndCell();
 
+        // Манхетонское расстояние
         //int H = Math.abs(endCell.x - currentCell.x) + Math.abs(endCell.y - currentCell.y);
+
+        // Евкилидово расстояние
         double H = Math.sqrt((endCell.x - currentCell.x) * (endCell.x - currentCell.x) + (endCell.y - currentCell.y) * (endCell.y - currentCell.y));
 
         ((EmptyCell) field[currentCell.x][currentCell.y]).setH(H);
