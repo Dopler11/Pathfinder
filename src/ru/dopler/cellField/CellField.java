@@ -6,35 +6,34 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class CellField extends JPanel implements MouseListener, MouseMotionListener {
 
-    private static final boolean DELAY_FLAG = false;
+    private static final boolean DELAY_FLAG = true;
     private static final int REFRESH_TIME_MS = 1;
 
     private static final int DIRECT_TRANSFER = 10;
     private static final int DIAGONAL_TRANSFER = 14;
 
-    private static final Color OPENED_CELLS_COLOR = new Color(170, 245, 245);
+    private static final Color OPENED_CELLS_COLOR = new Color(251, 255, 200);
     private static final Color CLOSED_CELLS_COLOR = new Color(170, 245, 175);
 
     private static final boolean DRAW_CELL_INFO_FLAG = false;
-    private int D = 1;
+    private int D;
 
     private List<Point> openedCells;
     private List<Point> closedCells;
 
-    private int width = 70;
-    private int height = 50;
+    private int width = 50;
+    private int height = 30;
 
     private final Point defaultStartPoint = new Point(1, height / 2);
     private final Point defaultEndPoint = new Point(width - 2, height / 2);
 
-    private int cellSize = 20;
+    private int cellSize = 15;
 
     private int mouseX;
     private int mouseY;
@@ -46,14 +45,13 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     private Cell[][] field = new Cell[width][height];
 
+    private boolean isFindingInProgress = false;
     private boolean isPathFind = false;
     private float pathLength;
 
     float lenFromStartToEnd;
 
-    private JTextField dTextField = new JTextField("5");
-
-    private Thread solutionThread;
+    private JTextField dTextField = new JTextField("10");
 
     public CellField () {
         super();
@@ -68,7 +66,6 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
             public void keyReleased (KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ENTER) {
                     resetSolution();
-                    initGrid();
                     startSolution();
 
                 } else if (e.getKeyChar() == KeyEvent.VK_SPACE) {
@@ -114,33 +111,29 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
     }
 
     private void initGrid () {
-        Random rnd = new Random();
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                if (rnd.nextInt(100) >= 30) {
-                    field[i][j] = new EmptyCell();
-                } else {
-                    field[i][j] = new Wall();
-                }
+                field[i][j] = new EmptyCell();
             }
         }
-        field[rnd.nextInt(width)][rnd.nextInt(height)] = new StartCell();
-        field[rnd.nextInt(width)][rnd.nextInt(height)] = new EndCell();
+        field[defaultStartPoint.x][defaultStartPoint.y] = new StartCell();
+        field[defaultEndPoint.x][defaultEndPoint.y] = new EndCell();
 
         openedCells = new ArrayList<Point>();
         closedCells = new ArrayList<Point>();
     }
 
     private void startSolution () {
-        solutionThread = new Thread(new Runnable() {
+        Thread solutionThread = new Thread(new Runnable() {
             @Override
             public void run () {
+                isFindingInProgress = true;
                 resetSolution();
                 String dText = dTextField.getText();
                 if (dText != null && !dText.isEmpty()) {
                     D = Integer.valueOf(dText);
                 } else {
-                    D = 1;
+                    D = 10;
                     dTextField.setText(String.valueOf(D));
                 }
 
@@ -148,6 +141,7 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
                 if (isPathFind) {
                     countPathLength();
                 }
+                isFindingInProgress = false;
             }
         });
 
@@ -358,6 +352,12 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     @Override
     public void mousePressed (MouseEvent e) {
+        if (isFindingInProgress) {
+            return;
+        }
+
+        resetSolution();
+
         int i = getRowByMouseX(e.getX());
         int j = getColumnByMouseY(e.getY());
 
@@ -370,6 +370,10 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     @Override
     public void mouseReleased (MouseEvent e) {
+        if (isFindingInProgress) {
+            return;
+        }
+
         resetSolution();
         draggedCell = null;
 
@@ -381,8 +385,6 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         } else if (e.getButton() == MouseEvent.BUTTON3 && !(field[i][j] instanceof StartCell || field[i][j] instanceof EndCell)) {
             field[i][j] = new EmptyCell();
         }
-
-        startSolution();
     }
 
     @Override
@@ -406,6 +408,10 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     @Override
     public void mouseDragged (MouseEvent e) {
+        if (isFindingInProgress) {
+            return;
+        }
+
         int i = getRowByMouseX(e.getX());
         int j = getColumnByMouseY(e.getY());
 
@@ -442,7 +448,6 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         }
 
         mouseMoved(e);
-        startSolution();
     }
 
     private int getRowByMouseX (int x) {
@@ -559,7 +564,10 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
             float alpha = 255 - (lenColor / (lenFromStartToEnd / 100)) * (255 / 100);
             alpha = alpha < 0 ? 0 : alpha;
 
-            Color color = new Color(10, 150, 40, (int) alpha);
+            Color color = new Color(CLOSED_CELLS_COLOR.getRed(),
+                    CLOSED_CELLS_COLOR.getGreen(),
+                    CLOSED_CELLS_COLOR.getBlue(),
+                    (int) alpha);
 
             field[cell.x][cell.y].setFillColor(color);
         }
