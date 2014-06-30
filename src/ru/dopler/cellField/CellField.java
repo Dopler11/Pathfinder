@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CellField extends JPanel implements MouseListener, MouseMotionListener {
 
-    private static final boolean DELAY_FLAG = true;
+    private static final boolean DELAY_FLAG = false;
     private static final int REFRESH_TIME_MS = 1;
 
     private static final int DIRECT_TRANSFER = 10;
@@ -51,7 +51,7 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
 
     float lenFromStartToEnd;
 
-    private JTextField dTextField = new JTextField("10");
+    private JTextField dTextField = new JTextField("5");
 
     public CellField () {
         super();
@@ -85,7 +85,6 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
         dTextField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased (KeyEvent e) {
-
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     startSolution();
                     grabFocus();
@@ -94,20 +93,13 @@ public class CellField extends JPanel implements MouseListener, MouseMotionListe
                     dTextField.setText(dTextField.getText().replace(" ", ""));
                     resetSolution();
                     grabFocus();
-                    //@fmt:off
-                } else if (e.getKeyCode() >= KeyEvent.VK_0 && e.getKeyCode() <= KeyEvent.VK_9
-                        || e.getKeyCode() >= KeyEvent.VK_NUMPAD0 && e.getKeyCode() <= KeyEvent.VK_NUMPAD9) {
-                    startSolution();
                 }
-                //@fmt:on
             }
         });
         add(dTextField);
 
         initGrid();
         initPainter();
-
-        startSolution();
     }
 
     private void initGrid () {
