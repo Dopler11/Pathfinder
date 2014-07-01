@@ -9,7 +9,6 @@ public class EmptyCell extends Cell {
 
     public EmptyCell () {
         fillColor = Color.white;
-        borderColor = Color.gray;
     }
 
     public double getF () {

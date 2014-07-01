@@ -4,21 +4,15 @@ import java.awt.*;
 
 public class StartCell extends Cell {
 
-    private double f = 0;
     private int g = 0;
     private double h = 0;
 
     public StartCell () {
         fillColor = Color.red;
-        borderColor = Color.gray;
     }
 
     public double getF () {
-        return f;
-    }
-
-    public void setF (double f) {
-        this.f = f;
+        return g + h;
     }
 
     public int getG () {

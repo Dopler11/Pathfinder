@@ -13,29 +13,37 @@ import java.util.concurrent.TimeUnit;
 
 public class Field extends JPanel implements MouseListener, MouseMotionListener {
 
-    private static final Color OPENED_CELLS_COLOR = new Color(251, 255, 200);
-    private static final Color CLOSED_CELLS_COLOR = new Color(170, 245, 175);
+    private static final Color OPENED_CELLS_COLOR = new Color(244, 255, 139);
+    private static final Color CLOSED_CELLS_COLOR = new Color(95, 201, 85);
+    private static final Color BORDER_COLOR = new Color(143, 143, 143);
+    private static final Color PATH_COLOR = new Color(182, 4, 0);
 
     private static final int REFRESH_TIME_MS = 1;
-
-    private static final boolean DRAW_CELL_INFO_FLAG = true;
+    private static final boolean DRAW_CELL_INFO_FLAG = false;
 
     private int mouseX;
     private int mouseY;
 
     private Algorithm alg;
-    private int width = 20;
-    private int height = 10;
-    private int cellSize = 50;
+    private static final int cellSize = 5;
+    private int fieldWidth;
+    private int fieldHeight;
+
+    private double lengthFromStartToEnd;
 
     private Cell draggedCell = null;
 
     private JTextField dTextField = new JTextField("5");
 
-    public Field () {
+    public Field (int winWidth, int winHeight) {
         super();
+        setSize(winWidth, winHeight);
 
-        alg = new AStar(width, height, Integer.valueOf(dTextField.getText()));
+        fieldWidth = (getWidth() - 200) / cellSize;
+        fieldHeight = (getHeight() - 40) / cellSize;
+
+        alg = new AStar(fieldWidth, fieldHeight, Integer.valueOf(dTextField.getText()));
+        lengthFromStartToEnd = getLength(alg.getStartCell(), alg.getEndCell());
 
         setLayout(null);
         setFocusable(true);
@@ -55,7 +63,7 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
             }
         });
 
-        int textX = width * cellSize + 20;
+        int textX = winWidth - 180;
         JLabel dLabel = new JLabel("Weight:");
         dLabel.setLocation(textX, 130);
         dLabel.setSize(45, 20);
@@ -110,16 +118,16 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
 
         drawGridInfo(g2d);
         drawCells(g2d);
-        if (DRAW_CELL_INFO_FLAG) {
-            drawCellsInfo(g2d);
-        }
         if (alg.isPathFind()) {
             drawPath(g2d);
+        }
+        if (DRAW_CELL_INFO_FLAG) {
+            drawCellsInfo(g2d);
         }
     }
 
     private void drawGridInfo (Graphics2D g2d) {
-        int gridInfoX = width * cellSize + 20;
+        int gridInfoX = getWidth() - 180;
 
         g2d.drawString(String.format("Mouse: x = %s y = %s", mouseX, mouseY), gridInfoX, 50);
 
@@ -133,59 +141,77 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
     }
 
     private void drawCells (Graphics2D g2d) {
-        for (int i = 0; i < width; i++) {
+        for (int i = 0; i < fieldWidth; i++) {
             int paintX = i * cellSize;
-            for (int j = 0; j < height; j++) {
+            for (int j = 0; j < fieldHeight; j++) {
                 int paintY = j * cellSize;
 
                 if (isCellOpened(new Point(i, j)) && !(alg.getCell(i, j) instanceof StartCell)) {
                     g2d.setColor(OPENED_CELLS_COLOR);
                     g2d.fillRect(paintX, paintY, cellSize, cellSize);
-                    g2d.setColor(alg.getCell(i, j).getBorderColor());
-                    g2d.drawRect(paintX, paintY, cellSize, cellSize);
 
                 } else if (isCellClosed(new Point(i, j)) && !(alg.getCell(i, j) instanceof StartCell)) {
-                    g2d.setColor(CLOSED_CELLS_COLOR);
+                    Point endCell = alg.getEndCell();
+                    Point cell = new Point(i, j);
+
+                    double lenColor = getLength(cell, endCell);
+
+                    double alpha = 255 - (lenColor / (lengthFromStartToEnd / 100)) * (255 / 100);
+                    alpha = alpha < 0 ? 0 : alpha;
+
+                    Color closedCellGradientColor = new Color(CLOSED_CELLS_COLOR.getRed(), CLOSED_CELLS_COLOR.getGreen(), CLOSED_CELLS_COLOR.getBlue(), (int) alpha);
+
+                    g2d.setColor(closedCellGradientColor);
                     g2d.fillRect(paintX, paintY, cellSize, cellSize);
-                    g2d.setColor(alg.getCell(i, j).getBorderColor());
-                    g2d.drawRect(paintX, paintY, cellSize, cellSize);
 
                 } else {
                     g2d.setColor(alg.getCell(i, j).getFillColor());
                     g2d.fillRect(paintX, paintY, cellSize, cellSize);
-                    g2d.setColor(alg.getCell(i, j).getBorderColor());
-                    g2d.drawRect(paintX, paintY, cellSize, cellSize);
+
                 }
+
+                g2d.setColor(BORDER_COLOR);
+                //g2d.drawRect(paintX, paintY, cellSize, cellSize);
             }
         }
+    }
+
+    private double getLength (Point startCell, Point endCell) {
+        int dx = endCell.x - startCell.x;
+        int dy = endCell.y - startCell.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     private boolean isCellOpened (Point cell) {
-        List<Point> openedCells = alg.getOpenedCells();
-        for (Point openedCell : openedCells) {
-            if (cell.equals(openedCell)) {
-                return true;
-            }
-        }
-        return false;
+        return alg.getCell(cell.x, cell.y).isOpened();
     }
 
     private boolean isCellClosed (Point cell) {
-        List<Point> closedCells = alg.getClosedCells();
-        for (Point closedCell : closedCells) {
-            if (cell.equals(closedCell)) {
-                return true;
-            }
+        return alg.getCell(cell.x, cell.y).isClosed();
+    }
+
+    private void drawPath (Graphics2D g2d) {
+        g2d.setColor(PATH_COLOR);
+        g2d.setStroke(new BasicStroke(cellSize / 5));
+        List<Point> path = alg.getPath();
+
+        for (Point pathCell : path) {
+            Point paintCurrentCell = new Point(pathCell.x * cellSize, pathCell.y * cellSize);
+            Point paintParentCell = getPaintParentCell(pathCell.x, pathCell.y);
+
+            Point currentCenter = getCellCenter(paintCurrentCell);
+            Point parentCenter = getCellCenter(paintParentCell);
+
+            g2d.drawLine(currentCenter.x, currentCenter.y, parentCenter.x, parentCenter.y);
         }
-        return false;
     }
 
     private void drawCellsInfo (Graphics2D g2d) {
         Point paintCurrentCell = new Point();
         Point paintParentCell;
-        for (int i = 0; i < width; i++) {
+        for (int i = 0; i < fieldWidth; i++) {
             paintCurrentCell.x = i * cellSize;
-            for (int j = 0; j < height; j++) {
+            for (int j = 0; j < fieldHeight; j++) {
                 paintCurrentCell.y = j * cellSize;
                 paintParentCell = getPaintParentCell(i, j);
 
@@ -200,7 +226,7 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
         if (parent != null) {
             return new Point(parent.x * cellSize, parent.y * cellSize);
         } else {
-            return null;
+            return new Point(i * cellSize, j * cellSize);
         }
     }
 
@@ -222,6 +248,7 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
         if (paintParentCell == null) {
             return;
         }
+        g2d.setStroke(new BasicStroke(1));
         g2d.setColor(Color.black);
 
         Point currentCellCenter = getCellCenter(paintCurrentCell);
@@ -237,25 +264,6 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
         p1 = getPointByLengthOnLine(currentCellCenter, parentCellCenter, -length - 3);
 
         g2d.drawOval(p1.x - 3, p1.y - 3, 6, 6);
-    }
-
-    private void drawPath (Graphics2D g2d) {
-        g2d.setColor(Color.orange);
-        g2d.setStroke(new BasicStroke(4));
-        List<Point> path = alg.getPath();
-
-        for (Point pathCell : path) {
-            Point paintCurrentCell = new Point(pathCell.x * cellSize, pathCell.y * cellSize);
-            Point paintParentCell = getPaintParentCell(pathCell.x, pathCell.y);
-            if (paintParentCell == null) {
-                continue;
-            }
-
-            Point currentCenter = getCellCenter(paintCurrentCell);
-            Point parentCenter = getCellCenter(paintParentCell);
-
-            g2d.drawLine(currentCenter.x, currentCenter.y, parentCenter.x, parentCenter.y);
-        }
     }
 
     private Point getCellCenter (Point cell) {
@@ -378,7 +386,7 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
 
     private int getRowByMouseX (int x) {
         int i = x / cellSize;
-        i = (i >= width) ? width - 1 : i;
+        i = (i >= fieldWidth) ? fieldWidth - 1 : i;
         i = (i < 0) ? 0 : i;
 
         return i;
@@ -386,7 +394,7 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
 
     private int getColumnByMouseY (int y) {
         int j = y / cellSize;
-        j = (j >= height) ? height - 1 : j;
+        j = (j >= fieldHeight) ? fieldHeight - 1 : j;
         j = (j < 0) ? 0 : j;
 
         return j;

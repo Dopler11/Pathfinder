@@ -74,8 +74,15 @@ public class AStar implements Algorithm {
     @Override
     public void start () {
         isProcess = true;
-        isPathFind = startAlgorithm();
-        countPath();
+
+        if (startAlgorithm()) {
+            countPath();
+            isPathFind = true;
+
+        } else {
+            isPathFind = false;
+        }
+
         isProcess = false;
     }
 
@@ -104,7 +111,7 @@ public class AStar implements Algorithm {
             int selectedCellIndex = getNextCellIndex();
             Point selectedCell = openedCells.get(selectedCellIndex);
 
-            openedCells.remove(selectedCellIndex);
+            removeFromOpenedCells(selectedCellIndex);
             addToClosedCells(selectedCell);
 
             if (processAdjoiningCells(selectedCell)) {
@@ -116,6 +123,10 @@ public class AStar implements Algorithm {
             }
             delay();
         }
+    }
+
+    private void removeFromOpenedCells (int selectedCellIndex) {
+        openedCells.remove(selectedCellIndex);
     }
 
     private boolean processAdjoiningCells (Point selectedCell) {
@@ -172,26 +183,14 @@ public class AStar implements Algorithm {
 
     private void addToOpenedCells (Point cell) {
         openedCells.add(cell);
+        getCell(cell.x, cell.y).setOpened(true);
+        getCell(cell.x, cell.y).setClosed(false);
     }
 
     private void addToClosedCells (Point cell) {
         closedCells.add(cell);
-/*        if (field[cell.x][cell.y] instanceof EmptyCell) {
-            Point endCell = getEndCell();
-            int dx = endCell.x - cell.x;
-            int dy = endCell.y - cell.y;
-            float lenColor = (float) Math.sqrt(dx * dx + dy * dy);
-
-            float alpha = 255 - (lenColor / (lenFromStartToEnd / 100)) * (255 / 100);
-            alpha = alpha < 0 ? 0 : alpha;
-
-            Color color = new Color(CLOSED_CELLS_COLOR.getRed(),
-                    CLOSED_CELLS_COLOR.getGreen(),
-                    CLOSED_CELLS_COLOR.getBlue(),
-                    (int) alpha);
-
-            field[cell.x][cell.y].setFillColor(color);
-        }*/
+        getCell(cell.x, cell.y).setOpened(false);
+        getCell(cell.x, cell.y).setClosed(true);
     }
 
     private java.util.List<Point> getAdjoiningCells (Point parentCell) {
@@ -265,21 +264,11 @@ public class AStar implements Algorithm {
     }
 
     private boolean isCellClosed (Point cell) {
-        for (Point closedCell : closedCells) {
-            if (cell.equals(closedCell)) {
-                return true;
-            }
-        }
-        return false;
+        return field[cell.x][cell.y].isClosed();
     }
 
     private boolean isCellOpened (Point cell) {
-        for (Point openedCell : openedCells) {
-            if (cell.equals(openedCell)) {
-                return true;
-            }
-        }
-        return false;
+        return field[cell.x][cell.y].isOpened();
     }
 
     private double countF (Point currentOpenCell) {

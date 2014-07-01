@@ -16,7 +16,9 @@ public class MainWindow extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        add(new Field());
+        Field field = new Field(getWidth(), getHeight());
+        add(field);
+
         setVisible(true);
     }
 }
