@@ -1,15 +1,15 @@
-package ru.dopler.cellField;
+package ru.dopler.field;
 
 import java.awt.*;
 
-public class EmptyCell extends Cell {
+public class EndCell extends Cell {
 
     private double f = 0;
     private int g = 0;
     private double h = 0;
 
-    public EmptyCell () {
-        fillColor = Color.white;
+    public EndCell () {
+        fillColor = Color.blue;
         borderColor = Color.gray;
     }
 
@@ -36,5 +36,4 @@ public class EmptyCell extends Cell {
     public void setH (double h) {
         this.h = h;
     }
-
 }

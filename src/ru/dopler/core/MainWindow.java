@@ -1,6 +1,6 @@
 package ru.dopler.core;
 
-import ru.dopler.cellField.CellField;
+import ru.dopler.field.Field;
 
 import javax.swing.*;
 
@@ -16,7 +16,7 @@ public class MainWindow extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        add(new CellField());
+        add(new Field());
         setVisible(true);
     }
 }

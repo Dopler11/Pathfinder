@@ -1,4 +1,4 @@
-package ru.dopler.cellField;
+package ru.dopler.field;
 
 import java.awt.*;
 
@@ -12,16 +12,8 @@ public class Cell {
         return fillColor;
     }
 
-    public void setFillColor (Color fillColor) {
-        this.fillColor = fillColor;
-    }
-
     public Color getBorderColor () {
         return borderColor;
-    }
-
-    public void setBorderColor (Color borderColor) {
-        this.borderColor = borderColor;
     }
 
     public Point getParent () {
