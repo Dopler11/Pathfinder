@@ -25,7 +25,7 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
     private int mouseY;
 
     private Algorithm alg;
-    private static final int cellSize = 5;
+    private static final int cellSize = 20;
     private int fieldWidth;
     private int fieldHeight;
 
