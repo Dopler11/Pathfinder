@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Field extends JPanel implements MouseListener, MouseMotionListener {
+public class FieldPainter extends JPanel implements MouseListener, MouseMotionListener {
 
     private static final Color OPENED_CELLS_COLOR = new Color(244, 255, 139);
     private static final Color CLOSED_CELLS_COLOR = new Color(95, 201, 85);
@@ -35,7 +35,7 @@ public class Field extends JPanel implements MouseListener, MouseMotionListener 
 
     private JTextField dTextField = new JTextField("5");
 
-    public Field (int winWidth, int winHeight) {
+    public FieldPainter (int winWidth, int winHeight) {
         super();
         setSize(winWidth, winHeight);
 
