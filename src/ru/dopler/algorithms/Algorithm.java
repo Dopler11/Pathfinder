@@ -1,6 +1,6 @@
 package ru.dopler.algorithms;
 
-import ru.dopler.field.Cell;
+import ru.dopler.cells.Cell;
 
 import java.awt.*;
 import java.util.List;

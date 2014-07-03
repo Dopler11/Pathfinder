@@ -1,6 +1,6 @@
 package ru.dopler.core;
 
-import ru.dopler.field.FieldPainter;
+import ru.dopler.painter.FieldPainter;
 
 import javax.swing.*;
 

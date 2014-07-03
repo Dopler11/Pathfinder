@@ -1,7 +1,8 @@
-package ru.dopler.field;
+package ru.dopler.painter;
 
 import ru.dopler.algorithms.AStar;
 import ru.dopler.algorithms.Algorithm;
+import ru.dopler.cells.*;
 
 import javax.swing.*;
 import java.awt.*;

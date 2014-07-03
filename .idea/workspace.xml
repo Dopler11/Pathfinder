@@ -2,7 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4ea64f83-fb52-42d0-918d-4bb4fc38c7ae" name="Default" comment="">
-      <change type="MOVED" beforePath="C:\Users\r.zagorodnichek\IdeaProjects\Pathfinder\src\ru\dopler\field\Field.java" afterPath="$PROJECT_DIR$/src/ru/dopler/field/FieldPainter.java" />
+      <change type="MOVED" beforePath="C:\Users\r.zagorodnichek\IdeaProjects\Pathfinder\src\ru\dopler\field\Cell.java" afterPath="$PROJECT_DIR$/src/ru/dopler/cells/Cell.java" />
+      <change type="MOVED" beforePath="C:\Users\r.zagorodnichek\IdeaProjects\Pathfinder\src\ru\dopler\field\EmptyCell.java" afterPath="$PROJECT_DIR$/src/ru/dopler/cells/EmptyCell.java" />
+      <change type="MOVED" beforePath="C:\Users\r.zagorodnichek\IdeaProjects\Pathfinder\src\ru\dopler\field\EndCell.java" afterPath="$PROJECT_DIR$/src/ru/dopler/cells/EndCell.java" />
+      <change type="MOVED" beforePath="C:\Users\r.zagorodnichek\IdeaProjects\Pathfinder\src\ru\dopler\field\FieldPainter.java" afterPath="$PROJECT_DIR$/src/ru/dopler/painter/FieldPainter.java" />
+      <change type="MOVED" beforePath="C:\Users\r.zagorodnichek\IdeaProjects\Pathfinder\src\ru\dopler\field\StartCell.java" afterPath="$PROJECT_DIR$/src/ru/dopler/cells/StartCell.java" />
+      <change type="MOVED" beforePath="C:\Users\r.zagorodnichek\IdeaProjects\Pathfinder\src\ru\dopler\field\Wall.java" afterPath="$PROJECT_DIR$/src/ru/dopler/cells/Wall.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/dopler/algorithms/AStar.java" afterPath="$PROJECT_DIR$/src/ru/dopler/algorithms/AStar.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/dopler/algorithms/Algorithm.java" afterPath="$PROJECT_DIR$/src/ru/dopler/algorithms/Algorithm.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/dopler/core/MainWindow.java" afterPath="$PROJECT_DIR$/src/ru/dopler/core/MainWindow.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -199,26 +206,8 @@
               <option name="myItemId" value="dopler" />
               <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
-          </PATH>
-          <PATH>
             <PATH_ELEMENT>
-              <option name="myItemId" value="Pathfinder" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Pathfinder" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dopler" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="field" />
+              <option name="myItemId" value="painter" />
               <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -241,6 +230,28 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="core" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Pathfinder" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Pathfinder" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dopler" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="cells" />
               <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -531,7 +542,11 @@
       <created>1404332900940</created>
       <updated>1404332900940</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Рефакторинг">
+      <created>1404380462563</created>
+      <updated>1404380462563</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TodoView" selected-index="0">
@@ -632,7 +647,8 @@
     <MESSAGE value="Запуск поиска пути не производится автоматически. Пока процесс поиска не окончен - поле блокируется для редактирования" />
     <MESSAGE value="Запуск поиска пути не производится автоматически. Пока процесс поиска не окончен - поле блокируется для редактирования. fix: Убран запуск решения по вводу значения эвристики" />
     <MESSAGE value="Оптимизация" />
-    <option name="LAST_COMMIT_MESSAGE" value="Оптимизация" />
+    <MESSAGE value="Рефакторинг" />
+    <option name="LAST_COMMIT_MESSAGE" value="Рефакторинг" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -742,6 +758,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.6141844" vertical-offset="94" max-vertical-offset="799">
           <caret line="31" column="19" selection-start-line="31" selection-start-column="19" selection-end-line="31" selection-end-column="19" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -752,7 +771,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ru/dopler/field/FieldPainter.java">
+    <entry file="file://$PROJECT_DIR$/src/ru/dopler/painter/FieldPainter.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.25847954" vertical-offset="0" max-vertical-offset="6426">
           <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />

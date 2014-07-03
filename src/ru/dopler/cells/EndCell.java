@@ -1,14 +1,14 @@
-package ru.dopler.field;
+package ru.dopler.cells;
 
 import java.awt.*;
 
-public class StartCell extends Cell {
+public class EndCell extends Cell {
 
     private int g = 0;
     private double h = 0;
 
-    public StartCell () {
-        fillColor = Color.red;
+    public EndCell () {
+        fillColor = Color.blue;
     }
 
     public double getF () {

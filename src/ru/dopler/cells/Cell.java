@@ -1,4 +1,4 @@
-package ru.dopler.field;
+package ru.dopler.cells;
 
 import java.awt.*;
 
