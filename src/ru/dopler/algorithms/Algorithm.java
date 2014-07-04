@@ -23,10 +23,6 @@ public interface Algorithm {
 
     void setEndCell (Point endCell);
 
-    List<Point> getOpenedCells ();
-
-    List<Point> getClosedCells ();
-
     boolean isProcess ();
 
     boolean isPathFind ();

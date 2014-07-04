@@ -12,7 +12,7 @@ public class AStar implements Algorithm {
     private static final int DIRECT_TRANSFER = 10;
     private static final int DIAGONAL_TRANSFER = 14;
 
-    private int delayValue = 0;
+    private long delayValue = 0;
 
     private volatile List<Point> openedCells;
     private volatile List<Point> closedCells;
@@ -38,7 +38,7 @@ public class AStar implements Algorithm {
         this.height = height;
         this.weight = weight;
         field = new Cell[width][height];
-        path = new ArrayList<Point>();
+        path = new ArrayList<>();
 
         initField();
         initAlgorithm();
@@ -67,8 +67,8 @@ public class AStar implements Algorithm {
     }
 
     private void initAlgorithm () {
-        openedCells = new ArrayList<Point>();
-        closedCells = new ArrayList<Point>();
+        openedCells = new ArrayList<>();
+        closedCells = new ArrayList<>();
     }
 
     @Override
@@ -194,7 +194,7 @@ public class AStar implements Algorithm {
     }
 
     private java.util.List<Point> getAdjoiningCells (Point parentCell) {
-        java.util.List<Point> adjoiningCells = new ArrayList<Point>();
+        java.util.List<Point> adjoiningCells = new ArrayList<>();
 
         java.util.List<Point> directOffsets = Arrays.asList(new Point(0, -1), new Point(-1, 0), new Point(1, 0), new Point(0, 1));
         java.util.List<Point> diagonalOffsets = Arrays.asList(new Point(-1, -1), new Point(1, -1), new Point(-1, 1), new Point(1, 1));
@@ -223,7 +223,7 @@ public class AStar implements Algorithm {
             return;
         }
 
-        java.util.List<Point> checkCells = new ArrayList<Point>();
+        java.util.List<Point> checkCells = new ArrayList<>();
         int dx;
         int dy;
         if (adjoiningCell.x > parentCell.x) {
@@ -321,11 +321,12 @@ public class AStar implements Algorithm {
                 }
             }
         }
-        openedCells = new ArrayList<Point>();
-        closedCells = new ArrayList<Point>();
+
+        openedCells.clear();
+        closedCells.clear();
         isProcess = false;
         isPathFind = false;
-        path = new ArrayList<Point>();
+        path.clear();
         pathLength = 0;
     }
 
@@ -364,20 +365,6 @@ public class AStar implements Algorithm {
     }
 
     @Override
-    public List<Point> getOpenedCells () {
-        List<Point> lsOpened = new ArrayList<Point>();
-        lsOpened.addAll(openedCells);
-        return lsOpened;
-    }
-
-    @Override
-    public List<Point> getClosedCells () {
-        List<Point> lsClosed = new ArrayList<Point>();
-        lsClosed.addAll(closedCells);
-        return lsClosed;
-    }
-
-    @Override
     public boolean isProcess () {
         return isProcess;
     }
@@ -403,12 +390,11 @@ public class AStar implements Algorithm {
     }
 
     private void delay () {
-        try {
-            if (delayValue != 0) {
-                Thread.sleep(delayValue);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (delayValue != 0) {
+            long startNanoTime = System.nanoTime();
+            do {
+                Thread.yield();
+            } while (startNanoTime + delayValue > System.nanoTime());
         }
     }
 
