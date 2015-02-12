@@ -15,7 +15,6 @@ public class AStar implements Algorithm {
     private long delayValue = 0;
 
     private volatile List<Point> openedCells;
-    private volatile List<Point> closedCells;
 
     private int width;
     private int height;
@@ -68,7 +67,6 @@ public class AStar implements Algorithm {
 
     private void initAlgorithm () {
         openedCells = new ArrayList<>();
-        closedCells = new ArrayList<>();
     }
 
     @Override
@@ -188,7 +186,6 @@ public class AStar implements Algorithm {
     }
 
     private void addToClosedCells (Point cell) {
-        closedCells.add(cell);
         getCell(cell.x, cell.y).setOpened(false);
         getCell(cell.x, cell.y).setClosed(true);
     }
@@ -323,7 +320,6 @@ public class AStar implements Algorithm {
         }
 
         openedCells.clear();
-        closedCells.clear();
         isProcess = false;
         isPathFind = false;
         path.clear();
