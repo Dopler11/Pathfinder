@@ -44,7 +44,7 @@ public class FieldPainter extends JPanel implements MouseListener, MouseMotionLi
         fieldHeight = (getHeight() - 40) / cellSize;
 
         alg = new AStar(fieldWidth, fieldHeight, Integer.valueOf(dTextField.getText()));
-        alg.setDelay(150000); //0.15 ms
+        alg.setDelay(600000);
         lengthFromStartToEnd = getLength(alg.getStartCell(), alg.getEndCell());
 
         setLayout(null);
@@ -169,7 +169,6 @@ public class FieldPainter extends JPanel implements MouseListener, MouseMotionLi
                 } else {
                     g2d.setColor(alg.getCell(i, j).getFillColor());
                     g2d.fillRect(paintX, paintY, cellSize, cellSize);
-
                 }
 
                 g2d.setColor(BORDER_COLOR);
